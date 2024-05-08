@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { VoiceOpcodes } from "discord-api-types/voice/v4";
+import { VoiceOpcodes } from "../types";
 
 export interface VoiceWebSocket extends EventEmitter {
 	on(event: "error", listener: (error: Error) => void): this;

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Buffer } from "buffer";
 import { EventEmitter } from "events";
-import { VoiceOpcodes } from "discord-api-types/voice/v4";
+import { VoiceOpcodes } from "../types";
 
 import * as secretbox from "../util/Secretbox";
 import { noop } from "../util/util";

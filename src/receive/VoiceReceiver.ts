@@ -1,7 +1,7 @@
 /* eslint-disable jsdoc/check-param-names */
 
 import { Buffer } from "buffer";
-import { VoiceOpcodes } from "discord-api-types/voice/v4";
+import { VoiceOpcodes } from "../types";
 import type { VoiceConnection } from "../VoiceConnection";
 import type { ConnectionData } from "../networking/Networking";
 import { methods } from "../util/Secretbox";

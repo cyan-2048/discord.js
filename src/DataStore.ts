@@ -1,6 +1,6 @@
-import { GatewayOpcodes } from 'discord-api-types/v10';
-import type { VoiceConnection } from './VoiceConnection';
-import type { AudioPlayer } from './audio/index';
+import { GatewayOpcodes } from "./types";
+import type { VoiceConnection } from "./VoiceConnection";
+import type { AudioPlayer } from "./audio/index";
 
 export interface JoinConfig {
 	channelId: string | null;
@@ -31,7 +31,7 @@ export function createJoinVoiceChannelPayload(config: JoinConfig) {
 
 // Voice Connections
 const groups = new Map<string, Map<string, VoiceConnection>>();
-groups.set('default', new Map());
+groups.set("default", new Map());
 
 function getOrCreateGroup(group: string) {
 	const existing = groups.get(group);
@@ -57,7 +57,7 @@ export function getGroups() {
  * @param group - The group to look up
  * @returns The map of voice connections
  */
-export function getVoiceConnections(group?: 'default'): Map<string, VoiceConnection>;
+export function getVoiceConnections(group?: "default"): Map<string, VoiceConnection>;
 
 /**
  * Retrieves all the voice connections under the given group name.
@@ -73,7 +73,7 @@ export function getVoiceConnections(group: string): Map<string, VoiceConnection>
  * @param group - The group to look up
  * @returns The map of voice connections
  */
-export function getVoiceConnections(group = 'default') {
+export function getVoiceConnections(group = "default") {
 	return groups.get(group);
 }
 
@@ -84,16 +84,21 @@ export function getVoiceConnections(group = 'default') {
  * @param group - the group that the voice connection was registered with
  * @returns The voice connection, if it exists
  */
-export function getVoiceConnection(guildId: string, group = 'default') {
+export function getVoiceConnection(guildId: string, group = "default") {
 	return getVoiceConnections(group)?.get(guildId);
 }
 
 export function untrackVoiceConnection(voiceConnection: VoiceConnection) {
-	return getVoiceConnections(voiceConnection.joinConfig.group)?.delete(voiceConnection.joinConfig.guildId);
+	return getVoiceConnections(voiceConnection.joinConfig.group)?.delete(
+		voiceConnection.joinConfig.guildId
+	);
 }
 
 export function trackVoiceConnection(voiceConnection: VoiceConnection) {
-	return getOrCreateGroup(voiceConnection.joinConfig.group).set(voiceConnection.joinConfig.guildId, voiceConnection);
+	return getOrCreateGroup(voiceConnection.joinConfig.group).set(
+		voiceConnection.joinConfig.guildId,
+		voiceConnection
+	);
 }
 
 // Audio Players
@@ -121,7 +126,7 @@ function audioCycleStep() {
 
 	for (const player of available) {
 		// eslint-disable-next-line @typescript-eslint/dot-notation
-		player['_stepDispatch']();
+		player["_stepDispatch"]();
 	}
 
 	prepareNextAudioFrame(available);
@@ -143,7 +148,7 @@ function prepareNextAudioFrame(players: AudioPlayer[]) {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/dot-notation
-	nextPlayer['_stepPrepare']();
+	nextPlayer["_stepPrepare"]();
 
 	// setImmediate to avoid long audio player chains blocking other scheduled tasks
 	setImmediate(() => prepareNextAudioFrame(players));
