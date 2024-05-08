@@ -1,7 +1,46 @@
-import { Buffer } from 'node:buffer';
-import { createSocket, type Socket } from 'node:dgram';
-import { EventEmitter } from 'node:events';
-import { isIPv4 } from 'node:net';
+import { Buffer } from "buffer";
+// import { createSocket, type Socket } from "node:dgram";
+import { EventEmitter } from "events";
+// import { isIPv4 } from "node:net";
+
+/**
+ * mimics the node:dgram module (well the ones used by this library),
+ * kaios has a somewhat new somewhat old implementation of UDPSocket
+ * https://sysapps.github.io/tcp-udp-sockets/LatestNonStreamBasedVersion/
+ *
+ * you can also find an example of how to use it by finding an archived documentation made for Firefox OS
+ */
+class KaiUDPSocket extends EventEmitter {
+	// @ts-ignore
+	udp = new UDPSocket();
+
+	async send(buffer: Buffer, port: number, address: string) {
+		// wait for udp to actually open before sending anything
+		await this.udp.opened;
+		this.udp.send(new Uint8Array(buffer), address, port);
+	}
+
+	constructor() {
+		super();
+
+		this.udp.onmessage = (event) => {
+			const buffer = Buffer.from(event.data);
+			this.emit("message", buffer);
+		};
+
+		this.udp.onerror = (event) => {
+			this.emit("error", event);
+		};
+
+		this.udp.onclose = () => {
+			this.emit("close");
+		};
+	}
+
+	close() {
+		this.udp.close();
+	}
+}
 
 /**
  * Stores an IP address and port. Used to store socket details for the local client as well as
@@ -20,11 +59,12 @@ export interface SocketConfig {
 export function parseLocalPacket(message: Buffer): SocketConfig {
 	const packet = Buffer.from(message);
 
-	const ip = packet.slice(8, packet.indexOf(0, 8)).toString('utf8');
+	const ip = packet.slice(8, packet.indexOf(0, 8)).toString("utf8");
 
-	if (!isIPv4(ip)) {
-		throw new Error('Malformed IP address');
-	}
+	// let's skip this part
+	// if (!isIPv4(ip)) {
+	// 	throw new Error("Malformed IP address");
+	// }
 
 	const port = packet.readUInt16BE(packet.length - 2);
 
@@ -42,10 +82,10 @@ const KEEP_ALIVE_INTERVAL = 5e3;
 const MAX_COUNTER_VALUE = 2 ** 32 - 1;
 
 export interface VoiceUDPSocket extends EventEmitter {
-	on(event: 'error', listener: (error: Error) => void): this;
-	on(event: 'close', listener: () => void): this;
-	on(event: 'debug', listener: (message: string) => void): this;
-	on(event: 'message', listener: (message: Buffer) => void): this;
+	on(event: "error", listener: (error: Error) => void): this;
+	on(event: "close", listener: () => void): this;
+	on(event: "debug", listener: (message: string) => void): this;
+	on(event: "message", listener: (message: Buffer) => void): this;
 }
 
 /**
@@ -55,7 +95,7 @@ export class VoiceUDPSocket extends EventEmitter {
 	/**
 	 * The underlying network Socket for the VoiceUDPSocket.
 	 */
-	private readonly socket: Socket;
+	private readonly socket: KaiUDPSocket;
 
 	/**
 	 * The socket details for Discord (remote)
@@ -91,10 +131,10 @@ export class VoiceUDPSocket extends EventEmitter {
 	 */
 	public constructor(remote: SocketConfig) {
 		super();
-		this.socket = createSocket('udp4');
-		this.socket.on('error', (error: Error) => this.emit('error', error));
-		this.socket.on('message', (buffer: Buffer) => this.onMessage(buffer));
-		this.socket.on('close', () => this.emit('close'));
+		this.socket = new KaiUDPSocket() /* createSocket("udp4") */;
+		this.socket.on("error", (error: Error) => this.emit("error", error));
+		this.socket.on("message", (buffer: Buffer) => this.onMessage(buffer));
+		this.socket.on("close", () => this.emit("close"));
 		this.remote = remote;
 		this.keepAliveBuffer = Buffer.alloc(8);
 		this.keepAliveInterval = setInterval(() => this.keepAlive(), KEEP_ALIVE_INTERVAL);
@@ -108,7 +148,7 @@ export class VoiceUDPSocket extends EventEmitter {
 	 */
 	private onMessage(buffer: Buffer): void {
 		// Propagate the message
-		this.emit('message', buffer);
+		this.emit("message", buffer);
 	}
 
 	/**
@@ -154,13 +194,15 @@ export class VoiceUDPSocket extends EventEmitter {
 				try {
 					if (message.readUInt16BE(0) !== 2) return;
 					const packet = parseLocalPacket(message);
-					this.socket.off('message', listener);
+					this.socket.off("message", listener);
 					resolve(packet);
 				} catch {}
 			};
 
-			this.socket.on('message', listener);
-			this.socket.once('close', () => reject(new Error('Cannot perform IP discovery - socket closed')));
+			this.socket.on("message", listener);
+			this.socket.once("close", () =>
+				reject(new Error("Cannot perform IP discovery - socket closed"))
+			);
 
 			const discoveryBuffer = Buffer.alloc(74);
 

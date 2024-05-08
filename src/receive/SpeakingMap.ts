@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
-import { EventEmitter } from 'node:events';
+import { EventEmitter } from 'events';
 
 export interface SpeakingMap extends EventEmitter {
 	/**

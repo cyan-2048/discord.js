@@ -1,4 +1,5 @@
-import { Buffer } from 'node:buffer';
+import { Buffer } from "buffer";
+import tweetnacl from "tweetnacl";
 
 interface Methods {
 	close(opusPacket: Buffer, nonce: Buffer, secretKey: Uint8Array): Buffer;
@@ -6,70 +7,24 @@ interface Methods {
 	random(bytes: number, nonce: Buffer): Buffer;
 }
 
-const libs = {
-	'sodium-native': (sodium: any): Methods => ({
-		open: (buffer: Buffer, nonce: Buffer, secretKey: Uint8Array) => {
-			if (buffer) {
-				const output = Buffer.allocUnsafe(buffer.length - sodium.crypto_box_MACBYTES);
-				if (sodium.crypto_secretbox_open_easy(output, buffer, nonce, secretKey)) return output;
-			}
-
-			return null;
-		},
-		close: (opusPacket: Buffer, nonce: Buffer, secretKey: Uint8Array) => {
-			const output = Buffer.allocUnsafe(opusPacket.length + sodium.crypto_box_MACBYTES);
-			sodium.crypto_secretbox_easy(output, opusPacket, nonce, secretKey);
-			return output;
-		},
-		random: (num: number, buffer: Buffer = Buffer.allocUnsafe(num)) => {
-			sodium.randombytes_buf(buffer);
-			return buffer;
-		},
-	}),
-	sodium: (sodium: any): Methods => ({
-		open: sodium.api.crypto_secretbox_open_easy,
-		close: sodium.api.crypto_secretbox_easy,
-		random: (num: number, buffer: Buffer = Buffer.allocUnsafe(num)) => {
-			sodium.api.randombytes_buf(buffer);
-			return buffer;
-		},
-	}),
-	'libsodium-wrappers': (sodium: any): Methods => ({
-		open: sodium.crypto_secretbox_open_easy,
-		close: sodium.crypto_secretbox_easy,
-		random: sodium.randombytes_buf,
-	}),
-	tweetnacl: (tweetnacl: any): Methods => ({
-		open: tweetnacl.secretbox.open,
-		close: tweetnacl.secretbox,
-		random: tweetnacl.randomBytes,
-	}),
-} as const;
-
-const fallbackError = () => {
-	throw new Error(
-		`Cannot play audio as no valid encryption package is installed.
-- Install sodium, libsodium-wrappers, or tweetnacl.
-- Use the generateDependencyReport() function for more information.\n`,
-	);
-};
-
 const methods: Methods = {
-	open: fallbackError,
-	close: fallbackError,
-	random: fallbackError,
-};
+	open: (buffer: Buffer, nonce: Buffer, secretKey: Uint8Array) => {
+		const _buffer = new Uint8Array(buffer);
+		const _nonce = new Uint8Array(nonce);
 
-void (async () => {
-	for (const libName of Object.keys(libs) as (keyof typeof libs)[]) {
-		try {
-			// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-			const lib = require(libName);
-			if (libName === 'libsodium-wrappers' && lib.ready) await lib.ready;
-			Object.assign(methods, libs[libName](lib));
-			break;
-		} catch {}
-	}
-})();
+		const result = tweetnacl.secretbox.open(_buffer, _nonce, secretKey);
+
+		return result === null ? null : Buffer.from(result);
+	},
+	close: (opusPacket: Buffer, nonce: Buffer, secretKey: Uint8Array) => {
+		const _opusPacket = new Uint8Array(opusPacket);
+		const _nonce = new Uint8Array(nonce);
+
+		return Buffer.from(tweetnacl.secretbox(_opusPacket, _nonce, secretKey));
+	},
+	random: (bytes: number) => {
+		return Buffer.from(tweetnacl.randomBytes(bytes));
+	},
+} as const;
 
 export { methods };

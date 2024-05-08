@@ -1,6 +1,6 @@
-import type { Buffer } from 'node:buffer';
-import { Readable, type ReadableOptions } from 'node:stream';
-import { SILENCE_FRAME } from '../audio/AudioPlayer';
+import type { Buffer } from "buffer";
+import { Readable, type ReadableOptions } from "stream-browserify";
+import { SILENCE_FRAME } from "../audio/AudioPlayer";
 
 /**
  * The different behaviors an audio receive stream can have for deciding when to end.

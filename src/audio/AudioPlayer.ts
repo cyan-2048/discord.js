@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/method-signature-style */
-import { Buffer } from 'node:buffer';
-import { EventEmitter } from 'node:events';
-import { addAudioPlayer, deleteAudioPlayer } from '../DataStore';
-import { VoiceConnectionStatus, type VoiceConnection } from '../VoiceConnection';
-import { noop } from '../util/util';
-import { AudioPlayerError } from './AudioPlayerError';
-import type { AudioResource } from './AudioResource';
-import { PlayerSubscription } from './PlayerSubscription';
+import { Buffer } from "buffer";
+import { EventEmitter } from "events";
+import { addAudioPlayer, deleteAudioPlayer } from "../DataStore";
+import { VoiceConnectionStatus, type VoiceConnection } from "../VoiceConnection";
+import { noop } from "../util/util";
+import { AudioPlayerError } from "./AudioPlayerError";
+import type { AudioResource } from "./AudioResource";
+import { PlayerSubscription } from "./PlayerSubscription";
 
 // The Opus "silent" frame
 export const SILENCE_FRAME = Buffer.from([0xf8, 0xff, 0xfe]);
@@ -19,44 +19,44 @@ export enum NoSubscriberBehavior {
 	/**
 	 * Pauses playing the stream until a voice connection becomes available.
 	 */
-	Pause = 'pause',
+	Pause = "pause",
 
 	/**
 	 * Continues to play through the resource regardless.
 	 */
-	Play = 'play',
+	Play = "play",
 
 	/**
 	 * The player stops and enters the Idle state.
 	 */
-	Stop = 'stop',
+	Stop = "stop",
 }
 
 export enum AudioPlayerStatus {
 	/**
 	 * When the player has paused itself. Only possible with the "pause" no subscriber behavior.
 	 */
-	AutoPaused = 'autopaused',
+	AutoPaused = "autopaused",
 
 	/**
 	 * When the player is waiting for an audio resource to become readable before transitioning to Playing.
 	 */
-	Buffering = 'buffering',
+	Buffering = "buffering",
 
 	/**
 	 * When there is currently no resource for the player to be playing.
 	 */
-	Idle = 'idle',
+	Idle = "idle",
 
 	/**
 	 * When the player has been manually paused.
 	 */
-	Paused = 'paused',
+	Paused = "paused",
 
 	/**
 	 * When the player is actively playing an audio resource.
 	 */
-	Playing = 'playing',
+	Playing = "playing",
 }
 
 /**
@@ -158,25 +158,31 @@ export interface AudioPlayer extends EventEmitter {
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'error', listener: (error: AudioPlayerError) => void): this;
+	on(event: "error", listener: (error: AudioPlayerError) => void): this;
 	/**
 	 * Emitted debugging information about the audio player
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'debug', listener: (message: string) => void): this;
+	on(event: "debug", listener: (message: string) => void): this;
 	/**
 	 * Emitted when the state of the audio player changes
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'stateChange', listener: (oldState: AudioPlayerState, newState: AudioPlayerState) => void): this;
+	on(
+		event: "stateChange",
+		listener: (oldState: AudioPlayerState, newState: AudioPlayerState) => void
+	): this;
 	/**
 	 * Emitted when the audio player is subscribed to a voice connection
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'subscribe' | 'unsubscribe', listener: (subscription: PlayerSubscription) => void): this;
+	on(
+		event: "subscribe" | "unsubscribe",
+		listener: (subscription: PlayerSubscription) => void
+	): this;
 	/**
 	 * Emitted when the status of state changes to a specific status
 	 *
@@ -184,7 +190,7 @@ export interface AudioPlayer extends EventEmitter {
 	 */
 	on<T extends AudioPlayerStatus>(
 		event: T,
-		listener: (oldState: AudioPlayerState, newState: AudioPlayerState & { status: T }) => void,
+		listener: (oldState: AudioPlayerState, newState: AudioPlayerState & { status: T }) => void
 	): this;
 }
 
@@ -196,8 +202,8 @@ export interface AudioPlayer extends EventEmitter {
 function stringifyState(state: AudioPlayerState) {
 	return JSON.stringify({
 		...state,
-		resource: Reflect.has(state, 'resource'),
-		stepTimeout: Reflect.has(state, 'stepTimeout'),
+		resource: Reflect.has(state, "resource"),
+		stepTimeout: Reflect.has(state, "stepTimeout"),
 	});
 }
 
@@ -247,7 +253,7 @@ export class AudioPlayer extends EventEmitter {
 			maxMissedFrames: 5,
 			...options.behaviors,
 		};
-		this.debug = options.debug === false ? null : (message: string) => this.emit('debug', message);
+		this.debug = options.debug === false ? null : (message: string) => this.emit("debug", message);
 	}
 
 	/**
@@ -270,11 +276,13 @@ export class AudioPlayer extends EventEmitter {
 	 */
 	// @ts-ignore
 	private subscribe(connection: VoiceConnection) {
-		const existingSubscription = this.subscribers.find((subscription) => subscription.connection === connection);
+		const existingSubscription = this.subscribers.find(
+			(subscription) => subscription.connection === connection
+		);
 		if (!existingSubscription) {
 			const subscription = new PlayerSubscription(connection, this);
 			this.subscribers.push(subscription);
-			setImmediate(() => this.emit('subscribe', subscription));
+			setImmediate(() => this.emit("subscribe", subscription));
 			return subscription;
 		}
 
@@ -296,7 +304,7 @@ export class AudioPlayer extends EventEmitter {
 		if (exists) {
 			this.subscribers.splice(index, 1);
 			subscription.connection.setSpeaking(false);
-			this.emit('unsubscribe', subscription);
+			this.emit("unsubscribe", subscription);
 		}
 
 		return exists;
@@ -314,11 +322,11 @@ export class AudioPlayer extends EventEmitter {
 	 */
 	public set state(newState: AudioPlayerState) {
 		const oldState = this._state;
-		const newResource = Reflect.get(newState, 'resource') as AudioResource | undefined;
+		const newResource = Reflect.get(newState, "resource") as AudioResource | undefined;
 
 		if (oldState.status !== AudioPlayerStatus.Idle && oldState.resource !== newResource) {
-			oldState.resource.playStream.on('error', noop);
-			oldState.resource.playStream.off('error', oldState.onStreamError);
+			oldState.resource.playStream.on("error", noop);
+			oldState.resource.playStream.off("error", oldState.onStreamError);
 			oldState.resource.audioPlayer = undefined;
 			oldState.resource.playStream.destroy();
 			oldState.resource.playStream.read(); // required to ensure buffered data is drained, prevents memory leak
@@ -329,10 +337,10 @@ export class AudioPlayer extends EventEmitter {
 			oldState.status === AudioPlayerStatus.Buffering &&
 			(newState.status !== AudioPlayerStatus.Buffering || newState.resource !== oldState.resource)
 		) {
-			oldState.resource.playStream.off('end', oldState.onFailureCallback);
-			oldState.resource.playStream.off('close', oldState.onFailureCallback);
-			oldState.resource.playStream.off('finish', oldState.onFailureCallback);
-			oldState.resource.playStream.off('readable', oldState.onReadableCallback);
+			oldState.resource.playStream.off("end", oldState.onFailureCallback);
+			oldState.resource.playStream.off("close", oldState.onFailureCallback);
+			oldState.resource.playStream.off("finish", oldState.onFailureCallback);
+			oldState.resource.playStream.off("readable", oldState.onReadableCallback);
 		}
 
 		// transitioning into an idle should ensure that connections stop speaking
@@ -354,7 +362,7 @@ export class AudioPlayer extends EventEmitter {
 
 		this._state = newState;
 
-		this.emit('stateChange', oldState, this._state);
+		this.emit("stateChange", oldState, this._state);
 		if (oldState.status !== newState.status || didChangeResources) {
 			this.emit(newState.status, oldState, this._state as any);
 		}
@@ -377,7 +385,7 @@ export class AudioPlayer extends EventEmitter {
 	 */
 	public play<T>(resource: AudioResource<T>) {
 		if (resource.ended) {
-			throw new Error('Cannot play a resource that has already ended.');
+			throw new Error("Cannot play a resource that has already ended.");
 		}
 
 		if (resource.audioPlayer) {
@@ -385,7 +393,7 @@ export class AudioPlayer extends EventEmitter {
 				return;
 			}
 
-			throw new Error('Resource is already being played by another audio player.');
+			throw new Error("Resource is already being played by another audio player.");
 		}
 
 		resource.audioPlayer = this;
@@ -394,7 +402,7 @@ export class AudioPlayer extends EventEmitter {
 		// state if the resource is still being used.
 		const onStreamError = (error: Error) => {
 			if (this.state.status !== AudioPlayerStatus.Idle) {
-				this.emit('error', new AudioPlayerError(error, this.state.resource));
+				this.emit("error", new AudioPlayerError(error, this.state.resource));
 			}
 
 			if (this.state.status !== AudioPlayerStatus.Idle && this.state.resource === resource) {
@@ -404,7 +412,7 @@ export class AudioPlayer extends EventEmitter {
 			}
 		};
 
-		resource.playStream.once('error', onStreamError);
+		resource.playStream.once("error", onStreamError);
 
 		if (resource.started) {
 			this.state = {
@@ -435,11 +443,11 @@ export class AudioPlayer extends EventEmitter {
 				}
 			};
 
-			resource.playStream.once('readable', onReadableCallback);
+			resource.playStream.once("readable", onReadableCallback);
 
-			resource.playStream.once('end', onFailureCallback);
-			resource.playStream.once('close', onFailureCallback);
-			resource.playStream.once('finish', onFailureCallback);
+			resource.playStream.once("end", onFailureCallback);
+			resource.playStream.once("close", onFailureCallback);
+			resource.playStream.once("finish", onFailureCallback);
 
 			this.state = {
 				status: AudioPlayerStatus.Buffering,
@@ -509,7 +517,8 @@ export class AudioPlayer extends EventEmitter {
 	 */
 	public checkPlayable() {
 		const state = this._state;
-		if (state.status === AudioPlayerStatus.Idle || state.status === AudioPlayerStatus.Buffering) return false;
+		if (state.status === AudioPlayerStatus.Idle || state.status === AudioPlayerStatus.Buffering)
+			return false;
 
 		// If the stream has been destroyed or is no longer readable, then transition to the Idle state.
 		if (!state.resource.readable) {
@@ -531,7 +540,8 @@ export class AudioPlayer extends EventEmitter {
 		const state = this._state;
 
 		// Guard against the Idle state
-		if (state.status === AudioPlayerStatus.Idle || state.status === AudioPlayerStatus.Buffering) return;
+		if (state.status === AudioPlayerStatus.Idle || state.status === AudioPlayerStatus.Buffering)
+			return;
 
 		// Dispatch any audio packets that were prepared in the previous cycle
 		for (const connection of this.playable) {
@@ -549,7 +559,8 @@ export class AudioPlayer extends EventEmitter {
 		const state = this._state;
 
 		// Guard against the Idle state
-		if (state.status === AudioPlayerStatus.Idle || state.status === AudioPlayerStatus.Buffering) return;
+		if (state.status === AudioPlayerStatus.Idle || state.status === AudioPlayerStatus.Buffering)
+			return;
 
 		// List of connections that can receive the packet
 		const playable = this.playable;
@@ -566,7 +577,10 @@ export class AudioPlayer extends EventEmitter {
 
 		/* If the player is (auto)paused, check to see whether silence packets should be played and
 		   set a timeout to begin the next cycle, ending the current cycle here. */
-		if (state.status === AudioPlayerStatus.Paused || state.status === AudioPlayerStatus.AutoPaused) {
+		if (
+			state.status === AudioPlayerStatus.Paused ||
+			state.status === AudioPlayerStatus.AutoPaused
+		) {
 			if (state.silencePacketsRemaining > 0) {
 				state.silencePacketsRemaining--;
 				this._preparePacket(SILENCE_FRAME, playable, state);
@@ -633,7 +647,7 @@ export class AudioPlayer extends EventEmitter {
 	private _preparePacket(
 		packet: Buffer,
 		receivers: VoiceConnection[],
-		state: AudioPlayerPausedState | AudioPlayerPlayingState,
+		state: AudioPlayerPausedState | AudioPlayerPlayingState
 	) {
 		state.playbackDuration += 20;
 		for (const connection of receivers) {

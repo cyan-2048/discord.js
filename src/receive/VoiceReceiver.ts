@@ -1,17 +1,17 @@
 /* eslint-disable jsdoc/check-param-names */
 
-import { Buffer } from 'node:buffer';
-import { VoiceOpcodes } from 'discord-api-types/voice/v4';
-import type { VoiceConnection } from '../VoiceConnection';
-import type { ConnectionData } from '../networking/Networking';
-import { methods } from '../util/Secretbox';
+import { Buffer } from "buffer";
+import { VoiceOpcodes } from "discord-api-types/voice/v4";
+import type { VoiceConnection } from "../VoiceConnection";
+import type { ConnectionData } from "../networking/Networking";
+import { methods } from "../util/Secretbox";
 import {
 	AudioReceiveStream,
 	createDefaultAudioReceiveStreamOptions,
 	type AudioReceiveStreamOptions,
-} from './AudioReceiveStream';
-import { SSRCMap } from './SSRCMap';
-import { SpeakingMap } from './SpeakingMap';
+} from "./AudioReceiveStream";
+import { SSRCMap } from "./SSRCMap";
+import { SpeakingMap } from "./SpeakingMap";
 
 /**
  * Attaches to a VoiceConnection, allowing you to receive audio packets from other
@@ -65,18 +65,18 @@ export class VoiceReceiver {
 	 * @internal
 	 */
 	public onWsPacket(packet: any) {
-		if (packet.op === VoiceOpcodes.ClientDisconnect && typeof packet.d?.user_id === 'string') {
+		if (packet.op === VoiceOpcodes.ClientDisconnect && typeof packet.d?.user_id === "string") {
 			this.ssrcMap.delete(packet.d.user_id);
 		} else if (
 			packet.op === VoiceOpcodes.Speaking &&
-			typeof packet.d?.user_id === 'string' &&
-			typeof packet.d?.ssrc === 'number'
+			typeof packet.d?.user_id === "string" &&
+			typeof packet.d?.ssrc === "number"
 		) {
 			this.ssrcMap.update({ userId: packet.d.user_id, audioSSRC: packet.d.ssrc });
 		} else if (
 			packet.op === VoiceOpcodes.ClientConnect &&
-			typeof packet.d?.user_id === 'string' &&
-			typeof packet.d?.audio_ssrc === 'number'
+			typeof packet.d?.user_id === "string" &&
+			typeof packet.d?.audio_ssrc === "number"
 		) {
 			this.ssrcMap.update({
 				userId: packet.d.user_id,
@@ -89,10 +89,10 @@ export class VoiceReceiver {
 	private decrypt(buffer: Buffer, mode: string, nonce: Buffer, secretKey: Uint8Array) {
 		// Choose correct nonce depending on encryption
 		let end;
-		if (mode === 'xsalsa20_poly1305_lite') {
+		if (mode === "xsalsa20_poly1305_lite") {
 			buffer.copy(nonce, 0, buffer.length - 4);
 			end = buffer.length - 4;
-		} else if (mode === 'xsalsa20_poly1305_suffix') {
+		} else if (mode === "xsalsa20_poly1305_suffix") {
 			buffer.copy(nonce, 0, buffer.length - 24);
 			end = buffer.length - 24;
 		} else {
@@ -145,17 +145,21 @@ export class VoiceReceiver {
 		const stream = this.subscriptions.get(userData.userId);
 		if (!stream) return;
 
-		if (this.connectionData.encryptionMode && this.connectionData.nonceBuffer && this.connectionData.secretKey) {
+		if (
+			this.connectionData.encryptionMode &&
+			this.connectionData.nonceBuffer &&
+			this.connectionData.secretKey
+		) {
 			const packet = this.parsePacket(
 				msg,
 				this.connectionData.encryptionMode,
 				this.connectionData.nonceBuffer,
-				this.connectionData.secretKey,
+				this.connectionData.secretKey
 			);
 			if (packet) {
 				stream.push(packet);
 			} else {
-				stream.destroy(new Error('Failed to parse packet'));
+				stream.destroy(new Error("Failed to parse packet"));
 			}
 		}
 	}
@@ -175,7 +179,7 @@ export class VoiceReceiver {
 			...options,
 		});
 
-		stream.once('close', () => this.subscriptions.delete(userId));
+		stream.once("close", () => this.subscriptions.delete(userId));
 		this.subscriptions.set(userId, stream);
 		return stream;
 	}

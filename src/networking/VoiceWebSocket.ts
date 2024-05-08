@@ -1,23 +1,22 @@
-import { EventEmitter } from 'node:events';
-import { VoiceOpcodes } from 'discord-api-types/voice/v4';
-import WebSocket, { type MessageEvent } from 'ws';
+import { EventEmitter } from "events";
+import { VoiceOpcodes } from "discord-api-types/voice/v4";
 
 export interface VoiceWebSocket extends EventEmitter {
-	on(event: 'error', listener: (error: Error) => void): this;
-	on(event: 'open', listener: (event: WebSocket.Event) => void): this;
-	on(event: 'close', listener: (event: WebSocket.CloseEvent) => void): this;
+	on(event: "error", listener: (error: Error) => void): this;
+	on(event: "open", listener: (event: Event) => void): this;
+	on(event: "close", listener: (event: CloseEvent) => void): this;
 	/**
 	 * Debug event for VoiceWebSocket.
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'debug', listener: (message: string) => void): this;
+	on(event: "debug", listener: (message: string) => void): this;
 	/**
 	 * Packet event.
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'packet', listener: (packet: any) => void): this;
+	on(event: "packet", listener: (packet: any) => void): this;
 }
 
 /**
@@ -71,14 +70,14 @@ export class VoiceWebSocket extends EventEmitter {
 		super();
 		this.ws = new WebSocket(address);
 		this.ws.onmessage = (err) => this.onMessage(err);
-		this.ws.onopen = (err) => this.emit('open', err);
-		this.ws.onerror = (err: Error | WebSocket.ErrorEvent) => this.emit('error', err instanceof Error ? err : err.error);
-		this.ws.onclose = (err) => this.emit('close', err);
+		this.ws.onopen = (err) => this.emit("open", err);
+		this.ws.onerror = (err: any) => this.emit("error", err instanceof Error ? err : err.error);
+		this.ws.onclose = (err) => this.emit("close", err);
 
 		this.lastHeartbeatAck = 0;
 		this.lastHeartbeatSend = 0;
 
-		this.debug = debug ? (message: string) => this.emit('debug', message) : null;
+		this.debug = debug ? (message: string) => this.emit("debug", message) : null;
 	}
 
 	/**
@@ -86,12 +85,12 @@ export class VoiceWebSocket extends EventEmitter {
 	 */
 	public destroy() {
 		try {
-			this.debug?.('destroyed');
+			this.debug?.("destroyed");
 			this.setHeartbeatInterval(-1);
 			this.ws.close(1_000);
 		} catch (error) {
 			const err = error as Error;
-			this.emit('error', err);
+			this.emit("error", err);
 		}
 	}
 
@@ -102,7 +101,7 @@ export class VoiceWebSocket extends EventEmitter {
 	 * @param event - The message event
 	 */
 	public onMessage(event: MessageEvent) {
-		if (typeof event.data !== 'string') return;
+		if (typeof event.data !== "string") return;
 
 		this.debug?.(`<< ${event.data}`);
 
@@ -111,7 +110,7 @@ export class VoiceWebSocket extends EventEmitter {
 			packet = JSON.parse(event.data);
 		} catch (error) {
 			const err = error as Error;
-			this.emit('error', err);
+			this.emit("error", err);
 			return;
 		}
 
@@ -121,7 +120,7 @@ export class VoiceWebSocket extends EventEmitter {
 			this.ping = this.lastHeartbeatAck - this.lastHeartbeatSend;
 		}
 
-		this.emit('packet', packet);
+		this.emit("packet", packet);
 	}
 
 	/**
@@ -136,7 +135,7 @@ export class VoiceWebSocket extends EventEmitter {
 			this.ws.send(stringified);
 		} catch (error) {
 			const err = error as Error;
-			this.emit('error', err);
+			this.emit("error", err);
 		}
 	}
 

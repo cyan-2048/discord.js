@@ -1,9 +1,9 @@
-import type { Buffer } from 'node:buffer';
-import { pipeline, type Readable } from 'node:stream';
-import prism from 'prism-media';
-import { noop } from '../util/util';
-import { SILENCE_FRAME, type AudioPlayer } from './AudioPlayer';
-import { findPipeline, StreamType, TransformerType, type Edge } from './TransformerGraph';
+import type { Buffer } from "buffer";
+import { pipeline, type Readable } from "stream-browserify";
+import prism from "prism-media";
+import { noop } from "../util/util";
+import { SILENCE_FRAME, type AudioPlayer } from "./AudioPlayer";
+import { findPipeline, StreamType, TransformerType, type Edge } from "./TransformerGraph";
 
 /**
  * Options that are set when creating a new audio resource.
@@ -96,9 +96,15 @@ export class AudioResource<T = unknown> {
 	 */
 	public silenceRemaining = -1;
 
-	public constructor(edges: readonly Edge[], streams: readonly Readable[], metadata: T, silencePaddingFrames: number) {
+	public constructor(
+		edges: readonly Edge[],
+		streams: readonly Readable[],
+		metadata: T,
+		silencePaddingFrames: number
+	) {
 		this.edges = edges;
-		this.playStream = streams.length > 1 ? (pipeline(streams, noop) as any as Readable) : streams[0]!;
+		this.playStream =
+			streams.length > 1 ? (pipeline(streams, noop) as any as Readable) : streams[0]!;
 		this.metadata = metadata;
 		this.silencePaddingFrames = silencePaddingFrames;
 
@@ -110,7 +116,7 @@ export class AudioResource<T = unknown> {
 			}
 		}
 
-		this.playStream.once('readable', () => (this.started = true));
+		this.playStream.once("readable", () => (this.started = true));
 	}
 
 	/**
@@ -132,7 +138,9 @@ export class AudioResource<T = unknown> {
 	 * Whether this resource has ended or not.
 	 */
 	public get ended() {
-		return this.playStream.readableEnded || this.playStream.destroyed || this.silenceRemaining === 0;
+		return (
+			this.playStream.readableEnded || this.playStream.destroyed || this.silenceRemaining === 0
+		);
 	}
 
 	/**
@@ -167,7 +175,8 @@ export class AudioResource<T = unknown> {
  *
  * @param path - The path to validate constraints on
  */
-export const VOLUME_CONSTRAINT = (path: Edge[]) => path.some((edge) => edge.type === TransformerType.InlineVolume);
+export const VOLUME_CONSTRAINT = (path: Edge[]) =>
+	path.some((edge) => edge.type === TransformerType.InlineVolume);
 
 export const NO_CONSTRAINT = () => true;
 
@@ -212,9 +221,11 @@ export function createAudioResource<T>(
 	input: Readable | string,
 	options: CreateAudioResourceOptions<T> &
 		Pick<
-			T extends null | undefined ? CreateAudioResourceOptions<T> : Required<CreateAudioResourceOptions<T>>,
-			'metadata'
-		>,
+			T extends null | undefined
+				? CreateAudioResourceOptions<T>
+				: Required<CreateAudioResourceOptions<T>>,
+			"metadata"
+		>
 ): AudioResource<T extends null | undefined ? null : T>;
 
 /**
@@ -232,7 +243,7 @@ export function createAudioResource<T>(
  */
 export function createAudioResource<T extends null | undefined>(
 	input: Readable | string,
-	options?: Omit<CreateAudioResourceOptions<T>, 'metadata'>,
+	options?: Omit<CreateAudioResourceOptions<T>, "metadata">
 ): AudioResource<null>;
 
 /**
@@ -250,13 +261,13 @@ export function createAudioResource<T extends null | undefined>(
  */
 export function createAudioResource<T>(
 	input: Readable | string,
-	options: CreateAudioResourceOptions<T> = {},
+	options: CreateAudioResourceOptions<T> = {}
 ): AudioResource<T> {
 	let inputType = options.inputType;
 	let needsInlineVolume = Boolean(options.inlineVolume);
 
 	// string inputs can only be used with FFmpeg
-	if (typeof input === 'string') {
+	if (typeof input === "string") {
 		inputType = StreamType.Arbitrary;
 	} else if (inputType === undefined) {
 		const analysis = inferStreamType(input);
@@ -264,21 +275,30 @@ export function createAudioResource<T>(
 		needsInlineVolume = needsInlineVolume && !analysis.hasVolume;
 	}
 
-	const transformerPipeline = findPipeline(inputType, needsInlineVolume ? VOLUME_CONSTRAINT : NO_CONSTRAINT);
+	const transformerPipeline = findPipeline(
+		inputType,
+		needsInlineVolume ? VOLUME_CONSTRAINT : NO_CONSTRAINT
+	);
 
 	if (transformerPipeline.length === 0) {
-		if (typeof input === 'string') throw new Error(`Invalid pipeline constructed for string resource '${input}'`);
+		if (typeof input === "string")
+			throw new Error(`Invalid pipeline constructed for string resource '${input}'`);
 		// No adjustments required
-		return new AudioResource<T>([], [input], (options.metadata ?? null) as T, options.silencePaddingFrames ?? 5);
+		return new AudioResource<T>(
+			[],
+			[input],
+			(options.metadata ?? null) as T,
+			options.silencePaddingFrames ?? 5
+		);
 	}
 
 	const streams = transformerPipeline.map((edge) => edge.transformer(input));
-	if (typeof input !== 'string') streams.unshift(input);
+	if (typeof input !== "string") streams.unshift(input);
 
 	return new AudioResource<T>(
 		transformerPipeline,
 		streams,
 		(options.metadata ?? null) as T,
-		options.silencePaddingFrames ?? 5,
+		options.silencePaddingFrames ?? 5
 	);
 }

@@ -1,25 +1,36 @@
-import type { Readable } from 'node:stream';
-import prism from 'prism-media';
+import type { Readable } from "stream-browserify";
+import prism from "prism-media";
 
 /**
  * This module creates a Transformer Graph to figure out what the most efficient way
  * of transforming the input stream into something playable would be.
  */
 
-const FFMPEG_PCM_ARGUMENTS = ['-analyzeduration', '0', '-loglevel', '0', '-f', 's16le', '-ar', '48000', '-ac', '2'];
+const FFMPEG_PCM_ARGUMENTS = [
+	"-analyzeduration",
+	"0",
+	"-loglevel",
+	"0",
+	"-f",
+	"s16le",
+	"-ar",
+	"48000",
+	"-ac",
+	"2",
+];
 const FFMPEG_OPUS_ARGUMENTS = [
-	'-analyzeduration',
-	'0',
-	'-loglevel',
-	'0',
-	'-acodec',
-	'libopus',
-	'-f',
-	'opus',
-	'-ar',
-	'48000',
-	'-ac',
-	'2',
+	"-analyzeduration",
+	"0",
+	"-loglevel",
+	"0",
+	"-acodec",
+	"libopus",
+	"-f",
+	"opus",
+	"-ar",
+	"48000",
+	"-ac",
+	"2",
 ];
 
 /**
@@ -29,36 +40,36 @@ export enum StreamType {
 	/**
 	 * The type of the stream at this point is unknown.
 	 */
-	Arbitrary = 'arbitrary',
+	Arbitrary = "arbitrary",
 	/**
 	 * The stream at this point is Opus audio encoded in an Ogg wrapper.
 	 */
-	OggOpus = 'ogg/opus',
+	OggOpus = "ogg/opus",
 	/**
 	 * The stream at this point is Opus audio, and the stream is in object-mode. This is ready to play.
 	 */
-	Opus = 'opus',
+	Opus = "opus",
 	/**
 	 * The stream at this point is s16le PCM.
 	 */
-	Raw = 'raw',
+	Raw = "raw",
 	/**
 	 * The stream at this point is Opus audio encoded in a WebM wrapper.
 	 */
-	WebmOpus = 'webm/opus',
+	WebmOpus = "webm/opus",
 }
 
 /**
  * The different types of transformers that can exist within the pipeline.
  */
 export enum TransformerType {
-	FFmpegOgg = 'ffmpeg ogg',
-	FFmpegPCM = 'ffmpeg pcm',
-	InlineVolume = 'volume transformer',
-	OggOpusDemuxer = 'ogg/opus demuxer',
-	OpusDecoder = 'opus decoder',
-	OpusEncoder = 'opus encoder',
-	WebmOpusDemuxer = 'webm/opus demuxer',
+	FFmpegOgg = "ffmpeg ogg",
+	FFmpegPCM = "ffmpeg pcm",
+	InlineVolume = "volume transformer",
+	OggOpusDemuxer = "ogg/opus demuxer",
+	OpusDecoder = "opus decoder",
+	OpusEncoder = "opus encoder",
+	WebmOpusDemuxer = "webm/opus demuxer",
 }
 
 /**
@@ -95,7 +106,7 @@ export class Node {
 	 *
 	 * @param edge - The edge to create
 	 */
-	public addEdge(edge: Omit<Edge, 'from'>) {
+	public addEdge(edge: Omit<Edge, "from">) {
 		this.edges.push({ ...edge, from: this });
 	}
 }
@@ -117,7 +128,7 @@ export function getNode(type: StreamType) {
 // Try to enable FFmpeg Ogg optimizations
 function canEnableFFmpegOptimizations(): boolean {
 	try {
-		return prism.FFmpeg.getInfo().output.includes('--enable-libopus');
+		return prism.FFmpeg.getInfo().output.includes("--enable-libopus");
 	} catch {}
 
 	return false;
@@ -157,13 +168,13 @@ function initializeNodes(): Map<StreamType, Node> {
 		transformer: () => new prism.opus.WebmDemuxer(),
 	});
 
-	const FFMPEG_PCM_EDGE: Omit<Edge, 'from'> = {
+	const FFMPEG_PCM_EDGE: Omit<Edge, "from"> = {
 		type: TransformerType.FFmpegPCM,
 		to: nodes.get(StreamType.Raw)!,
 		cost: 2,
 		transformer: (input) =>
 			new prism.FFmpeg({
-				args: ['-i', typeof input === 'string' ? input : '-', ...FFMPEG_PCM_ARGUMENTS],
+				args: ["-i", typeof input === "string" ? input : "-", ...FFMPEG_PCM_ARGUMENTS],
 			}),
 	};
 
@@ -175,17 +186,17 @@ function initializeNodes(): Map<StreamType, Node> {
 		type: TransformerType.InlineVolume,
 		to: nodes.get(StreamType.Raw)!,
 		cost: 0.5,
-		transformer: () => new prism.VolumeTransformer({ type: 's16le' }),
+		transformer: () => new prism.VolumeTransformer({ type: "s16le" }),
 	});
 
 	if (canEnableFFmpegOptimizations()) {
-		const FFMPEG_OGG_EDGE: Omit<Edge, 'from'> = {
+		const FFMPEG_OGG_EDGE: Omit<Edge, "from"> = {
 			type: TransformerType.FFmpegOgg,
 			to: nodes.get(StreamType.OggOpus)!,
 			cost: 2,
 			transformer: (input) =>
 				new prism.FFmpeg({
-					args: ['-i', typeof input === 'string' ? input : '-', ...FFMPEG_OPUS_ARGUMENTS],
+					args: ["-i", typeof input === "string" ? input : "-", ...FFMPEG_OPUS_ARGUMENTS],
 				}),
 		};
 		nodes.get(StreamType.Arbitrary)!.addEdge(FFMPEG_OGG_EDGE);
@@ -233,7 +244,7 @@ function findPath(
 	constraints: (path: Edge[]) => boolean,
 	goal = getNode(StreamType.Opus),
 	path: Edge[] = [],
-	depth = 5,
+	depth = 5
 ): Step {
 	if (from === goal && constraints(path)) {
 		return { cost: 0 };

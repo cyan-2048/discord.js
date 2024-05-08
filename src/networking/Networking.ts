@@ -1,21 +1,25 @@
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable id-length */
 /* eslint-disable @typescript-eslint/unbound-method */
-import { Buffer } from 'node:buffer';
-import { EventEmitter } from 'node:events';
-import { VoiceOpcodes } from 'discord-api-types/voice/v4';
-import type { CloseEvent } from 'ws';
-import * as secretbox from '../util/Secretbox';
-import { noop } from '../util/util';
-import { VoiceUDPSocket } from './VoiceUDPSocket';
-import { VoiceWebSocket } from './VoiceWebSocket';
+import { Buffer } from "buffer";
+import { EventEmitter } from "events";
+import { VoiceOpcodes } from "discord-api-types/voice/v4";
+
+import * as secretbox from "../util/Secretbox";
+import { noop } from "../util/util";
+import { VoiceUDPSocket } from "./VoiceUDPSocket";
+import { VoiceWebSocket } from "./VoiceWebSocket";
 
 // The number of audio channels required by Discord
 const CHANNELS = 2;
 const TIMESTAMP_INC = (48_000 / 100) * CHANNELS;
 const MAX_NONCE_SIZE = 2 ** 32 - 1;
 
-export const SUPPORTED_ENCRYPTION_MODES = ['xsalsa20_poly1305_lite', 'xsalsa20_poly1305_suffix', 'xsalsa20_poly1305'];
+export const SUPPORTED_ENCRYPTION_MODES = [
+	"xsalsa20_poly1305_lite",
+	"xsalsa20_poly1305_suffix",
+	"xsalsa20_poly1305",
+];
 
 /**
  * The different statuses that a networking instance can hold. The order
@@ -57,7 +61,7 @@ export interface NetworkingIdentifyingState {
  */
 export interface NetworkingUdpHandshakingState {
 	code: NetworkingStatusCode.UdpHandshaking;
-	connectionData: Pick<ConnectionData, 'ssrc'>;
+	connectionData: Pick<ConnectionData, "ssrc">;
 	connectionOptions: ConnectionOptions;
 	udp: VoiceUDPSocket;
 	ws: VoiceWebSocket;
@@ -68,7 +72,7 @@ export interface NetworkingUdpHandshakingState {
  */
 export interface NetworkingSelectingProtocolState {
 	code: NetworkingStatusCode.SelectingProtocol;
-	connectionData: Pick<ConnectionData, 'ssrc'>;
+	connectionData: Pick<ConnectionData, "ssrc">;
 	connectionOptions: ConnectionOptions;
 	udp: VoiceUDPSocket;
 	ws: VoiceWebSocket;
@@ -160,10 +164,13 @@ export interface Networking extends EventEmitter {
 	 *
 	 * @eventProperty
 	 */
-	on(event: 'debug', listener: (message: string) => void): this;
-	on(event: 'error', listener: (error: Error) => void): this;
-	on(event: 'stateChange', listener: (oldState: NetworkingState, newState: NetworkingState) => void): this;
-	on(event: 'close', listener: (code: number) => void): this;
+	on(event: "debug", listener: (message: string) => void): this;
+	on(event: "error", listener: (error: Error) => void): this;
+	on(
+		event: "stateChange",
+		listener: (oldState: NetworkingState, newState: NetworkingState) => void
+	): this;
+	on(event: "close", listener: (code: number) => void): this;
 }
 
 /**
@@ -174,8 +181,8 @@ export interface Networking extends EventEmitter {
 function stringifyState(state: NetworkingState) {
 	return JSON.stringify({
 		...state,
-		ws: Reflect.has(state, 'ws'),
-		udp: Reflect.has(state, 'udp'),
+		ws: Reflect.has(state, "ws"),
+		udp: Reflect.has(state, "udp"),
 	});
 }
 
@@ -187,7 +194,7 @@ function stringifyState(state: NetworkingState) {
 function chooseEncryptionMode(options: string[]): string {
 	const option = options.find((option) => SUPPORTED_ENCRYPTION_MODES.includes(option));
 	if (!option) {
-		throw new Error(`No compatible encryption modes. Available include: ${options.join(', ')}`);
+		throw new Error(`No compatible encryption modes. Available include: ${options.join(", ")}`);
 	}
 
 	return option;
@@ -227,7 +234,7 @@ export class Networking extends EventEmitter {
 		this.onUdpDebug = this.onUdpDebug.bind(this);
 		this.onUdpClose = this.onUdpClose.bind(this);
 
-		this.debug = debug ? (message: string) => this.emit('debug', message) : null;
+		this.debug = debug ? (message: string) => this.emit("debug", message) : null;
 
 		this._state = {
 			code: NetworkingStatusCode.OpeningWs,
@@ -256,33 +263,33 @@ export class Networking extends EventEmitter {
 	 * Sets a new state for the networking instance, performing clean-up operations where necessary.
 	 */
 	public set state(newState: NetworkingState) {
-		const oldWs = Reflect.get(this._state, 'ws') as VoiceWebSocket | undefined;
-		const newWs = Reflect.get(newState, 'ws') as VoiceWebSocket | undefined;
+		const oldWs = Reflect.get(this._state, "ws") as VoiceWebSocket | undefined;
+		const newWs = Reflect.get(newState, "ws") as VoiceWebSocket | undefined;
 		if (oldWs && oldWs !== newWs) {
 			// The old WebSocket is being freed - remove all handlers from it
-			oldWs.off('debug', this.onWsDebug);
-			oldWs.on('error', noop);
-			oldWs.off('error', this.onChildError);
-			oldWs.off('open', this.onWsOpen);
-			oldWs.off('packet', this.onWsPacket);
-			oldWs.off('close', this.onWsClose);
+			oldWs.off("debug", this.onWsDebug);
+			oldWs.on("error", noop);
+			oldWs.off("error", this.onChildError);
+			oldWs.off("open", this.onWsOpen);
+			oldWs.off("packet", this.onWsPacket);
+			oldWs.off("close", this.onWsClose);
 			oldWs.destroy();
 		}
 
-		const oldUdp = Reflect.get(this._state, 'udp') as VoiceUDPSocket | undefined;
-		const newUdp = Reflect.get(newState, 'udp') as VoiceUDPSocket | undefined;
+		const oldUdp = Reflect.get(this._state, "udp") as VoiceUDPSocket | undefined;
+		const newUdp = Reflect.get(newState, "udp") as VoiceUDPSocket | undefined;
 
 		if (oldUdp && oldUdp !== newUdp) {
-			oldUdp.on('error', noop);
-			oldUdp.off('error', this.onChildError);
-			oldUdp.off('close', this.onUdpClose);
-			oldUdp.off('debug', this.onUdpDebug);
+			oldUdp.on("error", noop);
+			oldUdp.off("error", this.onChildError);
+			oldUdp.off("close", this.onUdpClose);
+			oldUdp.off("debug", this.onUdpDebug);
 			oldUdp.destroy();
 		}
 
 		const oldState = this._state;
 		this._state = newState;
-		this.emit('stateChange', oldState, newState);
+		this.emit("stateChange", oldState, newState);
 
 		this.debug?.(`state change:\nfrom ${stringifyState(oldState)}\nto ${stringifyState(newState)}`);
 	}
@@ -295,11 +302,11 @@ export class Networking extends EventEmitter {
 	private createWebSocket(endpoint: string) {
 		const ws = new VoiceWebSocket(`wss://${endpoint}?v=4`, Boolean(this.debug));
 
-		ws.on('error', this.onChildError);
-		ws.once('open', this.onWsOpen);
-		ws.on('packet', this.onWsPacket);
-		ws.once('close', this.onWsClose);
-		ws.on('debug', this.onWsDebug);
+		ws.on("error", this.onChildError);
+		ws.once("open", this.onWsOpen);
+		ws.on("packet", this.onWsPacket);
+		ws.once("close", this.onWsClose);
+		ws.on("debug", this.onWsDebug);
 
 		return ws;
 	}
@@ -310,7 +317,7 @@ export class Networking extends EventEmitter {
 	 * @param error - The error that was emitted by a child
 	 */
 	private onChildError(error: Error) {
-		this.emit('error', error);
+		this.emit("error", error);
 	}
 
 	/**
@@ -363,7 +370,7 @@ export class Networking extends EventEmitter {
 			};
 		} else if (this.state.code !== NetworkingStatusCode.Closed) {
 			this.destroy();
-			this.emit('close', code);
+			this.emit("close", code);
 		}
 	}
 
@@ -388,13 +395,16 @@ export class Networking extends EventEmitter {
 	private onWsPacket(packet: any) {
 		if (packet.op === VoiceOpcodes.Hello && this.state.code !== NetworkingStatusCode.Closed) {
 			this.state.ws.setHeartbeatInterval(packet.d.heartbeat_interval);
-		} else if (packet.op === VoiceOpcodes.Ready && this.state.code === NetworkingStatusCode.Identifying) {
+		} else if (
+			packet.op === VoiceOpcodes.Ready &&
+			this.state.code === NetworkingStatusCode.Identifying
+		) {
 			const { ip, port, ssrc, modes } = packet.d;
 
 			const udp = new VoiceUDPSocket({ ip, port });
-			udp.on('error', this.onChildError);
-			udp.on('debug', this.onUdpDebug);
-			udp.once('close', this.onUdpClose);
+			udp.on("error", this.onChildError);
+			udp.on("debug", this.onUdpDebug);
+			udp.once("close", this.onUdpClose);
 			udp
 				.performIPDiscovery(ssrc)
 				// eslint-disable-next-line promise/prefer-await-to-then
@@ -403,7 +413,7 @@ export class Networking extends EventEmitter {
 					this.state.ws.sendPacket({
 						op: VoiceOpcodes.SelectProtocol,
 						d: {
-							protocol: 'udp',
+							protocol: "udp",
 							data: {
 								address: localConfig.ip,
 								port: localConfig.port,
@@ -417,7 +427,7 @@ export class Networking extends EventEmitter {
 					};
 				})
 				// eslint-disable-next-line promise/prefer-await-to-then, promise/prefer-await-to-callbacks
-				.catch((error: Error) => this.emit('error', error));
+				.catch((error: Error) => this.emit("error", error));
 
 			this.state = {
 				...this.state,
@@ -447,7 +457,10 @@ export class Networking extends EventEmitter {
 					packetsPlayed: 0,
 				},
 			};
-		} else if (packet.op === VoiceOpcodes.Resumed && this.state.code === NetworkingStatusCode.Resuming) {
+		} else if (
+			packet.op === VoiceOpcodes.Resumed &&
+			this.state.code === NetworkingStatusCode.Resuming
+		) {
 			this.state = {
 				...this.state,
 				code: NetworkingStatusCode.Ready,
@@ -577,7 +590,7 @@ export class Networking extends EventEmitter {
 	private encryptOpusPacket(opusPacket: Buffer, connectionData: ConnectionData) {
 		const { secretKey, encryptionMode } = connectionData;
 
-		if (encryptionMode === 'xsalsa20_poly1305_lite') {
+		if (encryptionMode === "xsalsa20_poly1305_lite") {
 			connectionData.nonce++;
 			if (connectionData.nonce > MAX_NONCE_SIZE) connectionData.nonce = 0;
 			connectionData.nonceBuffer.writeUInt32BE(connectionData.nonce, 0);
@@ -585,7 +598,7 @@ export class Networking extends EventEmitter {
 				secretbox.methods.close(opusPacket, connectionData.nonceBuffer, secretKey),
 				connectionData.nonceBuffer.slice(0, 4),
 			];
-		} else if (encryptionMode === 'xsalsa20_poly1305_suffix') {
+		} else if (encryptionMode === "xsalsa20_poly1305_suffix") {
 			const random = secretbox.methods.random(24, connectionData.nonceBuffer);
 			return [secretbox.methods.close(opusPacket, random, secretKey), random];
 		}

@@ -1,9 +1,9 @@
-import { Buffer } from 'node:buffer';
-import process from 'node:process';
-import { Readable } from 'node:stream';
-import prism from 'prism-media';
-import { StreamType } from '..';
-import { noop } from './util';
+import { Buffer } from "buffer";
+// import process from "node:process";
+import { Readable } from "stream-browserify";
+import prism from "prism-media";
+import { StreamType } from "..";
+import { noop } from "./util";
 
 /**
  * Takes an Opus Head, and verifies whether the associated Opus audio is suitable to play in a Discord voice channel.
@@ -44,17 +44,17 @@ export interface ProbeInfo {
 export async function demuxProbe(
 	stream: Readable,
 	probeSize = 1_024,
-	validator = validateDiscordOpusHead,
+	validator = validateDiscordOpusHead
 ): Promise<ProbeInfo> {
 	return new Promise((resolve, reject) => {
 		// Preconditions
 		if (stream.readableObjectMode) {
-			reject(new Error('Cannot probe a readable stream in object mode'));
+			reject(new Error("Cannot probe a readable stream in object mode"));
 			return;
 		}
 
 		if (stream.readableEnded) {
-			reject(new Error('Cannot probe a stream that has ended'));
+			reject(new Error("Cannot probe a stream that has ended"));
 			return;
 		}
 
@@ -64,11 +64,11 @@ export async function demuxProbe(
 
 		const finish = (type: StreamType) => {
 			// eslint-disable-next-line @typescript-eslint/no-use-before-define
-			stream.off('data', onData);
+			stream.off("data", onData);
 			// eslint-disable-next-line @typescript-eslint/no-use-before-define
-			stream.off('close', onClose);
+			stream.off("close", onClose);
 			// eslint-disable-next-line @typescript-eslint/no-use-before-define
-			stream.off('end', onClose);
+			stream.off("end", onClose);
 			stream.pause();
 			resolved = type;
 			if (stream.readableEnded) {
@@ -95,12 +95,12 @@ export async function demuxProbe(
 		};
 
 		const webm = new prism.opus.WebmDemuxer();
-		webm.once('error', noop);
-		webm.on('head', foundHead(StreamType.WebmOpus));
+		webm.once("error", noop);
+		webm.on("head", foundHead(StreamType.WebmOpus));
 
 		const ogg = new prism.opus.OggDemuxer();
-		ogg.once('error', noop);
-		ogg.on('head', foundHead(StreamType.OggOpus));
+		ogg.once("error", noop);
+		ogg.on("head", foundHead(StreamType.OggOpus));
 
 		const onClose = () => {
 			if (!resolved) {
@@ -115,15 +115,22 @@ export async function demuxProbe(
 			ogg.write(buffer);
 
 			if (readBuffer.length >= probeSize) {
-				stream.off('data', onData);
+				stream.off("data", onData);
 				stream.pause();
-				process.nextTick(onClose);
+
+				// apparently, if you want to polyfill this you can use requestAnimationFrame
+				// setImmediate can also be used but eh
+				// process.nextTick(onClose);
+
+				requestAnimationFrame(() => {
+					onClose();
+				});
 			}
 		};
 
-		stream.once('error', reject);
-		stream.on('data', onData);
-		stream.once('close', onClose);
-		stream.once('end', onClose);
+		stream.once("error", reject);
+		stream.on("data", onData);
+		stream.once("close", onClose);
+		stream.once("end", onClose);
 	});
 }

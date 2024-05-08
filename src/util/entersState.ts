@@ -1,4 +1,4 @@
-import { type EventEmitter, once } from 'node:events';
+import { type EventEmitter, once } from 'events';
 import type { VoiceConnection, VoiceConnectionStatus } from '../VoiceConnection';
 import type { AudioPlayer, AudioPlayerStatus } from '../audio/AudioPlayer';
 import { abortAfter } from './abortAfter';
