@@ -33,7 +33,8 @@
     "discord-api-types": "0.37.61",
     "events": "^3.3.0",
     "opusscript": "cyan-2048/opusscript",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.2",
+    "stream-browserify": "cyan-2048/stream-browserify"
   },
   "devDependencies": {
     "@babel/core": "^7.23.2",
