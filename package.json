@@ -31,9 +31,9 @@
 	"dependencies": {
 		"discord-api-types": "0.37.61",
 		"events": "^3.3.0",
-		"opusscript": "cyan-2048/opusscript",
+		"opusscript": "git://github.com/cyan-2048/opusscript.git",
 		"tslib": "^2.6.2",
-		"stream-browserify": "cyan-2048/stream-browserify"
+		"stream-browserify": "git://github.com/cyan-2048/stream-browserify.git"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.23.2",
