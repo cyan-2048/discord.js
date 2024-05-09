@@ -1,4 +1,5 @@
-import { Buffer } from "buffer";
+// we will use global.Buffer
+// import { Buffer } from "buffer";
 // import { createSocket, type Socket } from "node:dgram";
 import { EventEmitter } from "events";
 // import { isIPv4 } from "node:net";

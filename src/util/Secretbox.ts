@@ -1,4 +1,5 @@
-import { Buffer } from "buffer";
+// we will use global.Buffer
+// import { Buffer } from "buffer";
 import tweetnacl from "tweetnacl";
 
 interface Methods {

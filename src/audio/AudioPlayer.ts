@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/method-signature-style */
-import { Buffer } from "buffer";
+// we will use global.Buffer
+// import { Buffer } from "buffer";
 import { EventEmitter } from "events";
 import { addAudioPlayer, deleteAudioPlayer } from "../DataStore";
 import { VoiceConnectionStatus, type VoiceConnection } from "../VoiceConnection";

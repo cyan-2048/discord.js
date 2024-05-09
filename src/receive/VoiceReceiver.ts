@@ -1,6 +1,7 @@
 /* eslint-disable jsdoc/check-param-names */
 
-import { Buffer } from "buffer";
+// we will use global.Buffer
+// import { Buffer } from "buffer";
 import { VoiceOpcodes } from "../types";
 import type { VoiceConnection } from "../VoiceConnection";
 import type { ConnectionData } from "../networking/Networking";

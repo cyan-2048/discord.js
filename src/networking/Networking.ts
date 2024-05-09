@@ -1,7 +1,8 @@
 /* eslint-disable jsdoc/check-param-names */
 /* eslint-disable id-length */
 /* eslint-disable @typescript-eslint/unbound-method */
-import { Buffer } from "buffer";
+// we will use global.Buffer
+// import { Buffer } from "buffer";
 import { EventEmitter } from "events";
 import { VoiceOpcodes } from "../types";
 

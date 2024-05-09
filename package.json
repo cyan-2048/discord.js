@@ -1,61 +1,60 @@
 {
-  "$schema": "https://json.schemastore.org/package.json",
-  "name": "discordjs-voice",
-  "version": "0.16.5",
-  "description": "Implementation of the Discord Voice API for Node.js",
-  "main": "./src/index.ts",
-  "contributors": [
-    "Crawl <icrawltogo@gmail.com>",
-    "Amish Shah <amishshah.2k@gmail.com>",
-    "SpaceEEC <spaceeec@yahoo.com>",
-    "Vlad Frangu <kingdgrizzle@gmail.com>",
-    "Aura Román <kyradiscord@gmail.com>"
-  ],
-  "license": "Apache-2.0",
-  "keywords": [
-    "discord",
-    "discord.js",
-    "audio",
-    "voice",
-    "streaming"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/discordjs/discord.js.git",
-    "directory": "packages/voice"
-  },
-  "bugs": {
-    "url": "https://github.com/discordjs/discord.js/issues"
-  },
-  "homepage": "https://discord.js.org",
-  "dependencies": {
-    "buffer": "cyan-2048/buffer",
-    "discord-api-types": "0.37.61",
-    "events": "^3.3.0",
-    "opusscript": "cyan-2048/opusscript",
-    "tslib": "^2.6.2",
-    "stream-browserify": "cyan-2048/stream-browserify"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.23.2",
-    "@babel/preset-env": "^7.23.2",
-    "@babel/preset-typescript": "^7.23.2",
-    "@favware/cliff-jumper": "^2.2.1",
-    "@microsoft/api-extractor": "^7.38.2",
-    "@types/jest": "^29.5.7",
-    "@types/node": "16.18.60",
-    "cross-env": "^7.0.3",
-    "esbuild-plugin-version-injector": "^1.2.1",
-    "eslint": "^8.53.0",
-    "eslint-config-neon": "^0.1.57",
-    "eslint-formatter-pretty": "^5.0.0",
-    "jest": "^29.7.0",
-    "jest-websocket-mock": "^2.5.0",
-    "mock-socket": "^9.3.1",
-    "prettier": "^3.0.3",
-    "tsup": "^7.2.0",
-    "turbo": "^1.10.16",
-    "tweetnacl": "^1.0.3",
-    "typescript": "^5.2.2"
-  }
+	"$schema": "https://json.schemastore.org/package.json",
+	"name": "discordjs-voice",
+	"version": "0.16.6",
+	"description": "Implementation of the Discord Voice API for Node.js",
+	"main": "./src/index.ts",
+	"contributors": [
+		"Crawl <icrawltogo@gmail.com>",
+		"Amish Shah <amishshah.2k@gmail.com>",
+		"SpaceEEC <spaceeec@yahoo.com>",
+		"Vlad Frangu <kingdgrizzle@gmail.com>",
+		"Aura Román <kyradiscord@gmail.com>"
+	],
+	"license": "Apache-2.0",
+	"keywords": [
+		"discord",
+		"discord.js",
+		"audio",
+		"voice",
+		"streaming"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/discordjs/discord.js.git",
+		"directory": "packages/voice"
+	},
+	"bugs": {
+		"url": "https://github.com/discordjs/discord.js/issues"
+	},
+	"homepage": "https://discord.js.org",
+	"dependencies": {
+		"discord-api-types": "0.37.61",
+		"events": "^3.3.0",
+		"opusscript": "cyan-2048/opusscript",
+		"tslib": "^2.6.2",
+		"stream-browserify": "cyan-2048/stream-browserify"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.23.2",
+		"@babel/preset-env": "^7.23.2",
+		"@babel/preset-typescript": "^7.23.2",
+		"@favware/cliff-jumper": "^2.2.1",
+		"@microsoft/api-extractor": "^7.38.2",
+		"@types/jest": "^29.5.7",
+		"@types/node": "16.18.60",
+		"cross-env": "^7.0.3",
+		"esbuild-plugin-version-injector": "^1.2.1",
+		"eslint": "^8.53.0",
+		"eslint-config-neon": "^0.1.57",
+		"eslint-formatter-pretty": "^5.0.0",
+		"jest": "^29.7.0",
+		"jest-websocket-mock": "^2.5.0",
+		"mock-socket": "^9.3.1",
+		"prettier": "^3.0.3",
+		"tsup": "^7.2.0",
+		"turbo": "^1.10.16",
+		"tweetnacl": "^1.0.3",
+		"typescript": "^5.2.2"
+	}
 }
